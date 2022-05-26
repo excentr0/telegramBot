@@ -10,12 +10,12 @@ import javax.validation.constraints.NotNull;
 @Validated
 @Configuration
 public class TelegramBotConfig {
-    @Value("${TELEGRAM_TOKEN:5340998927:AAFk63hOauVBf3NBfErxOtGtXMJk4_WgEnk}")
+    @Value("${TELEGRAM_TOKEN}")
     @NotNull
     @NotEmpty
     private String token;
 
-    @Value("${TELEGRAM_USERNAME:ExcentroBot}")
+    @Value("${TELEGRAM_USERNAME}")
     @NotNull
     @NotEmpty
     private String username;

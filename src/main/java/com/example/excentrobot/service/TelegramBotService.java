@@ -12,6 +12,7 @@ import org.telegram.telegrambots.bots.DefaultBotOptions;
 import org.telegram.telegrambots.bots.TelegramWebhookBot;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updates.SetWebhook;
 import org.telegram.telegrambots.meta.api.objects.ApiResponse;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -29,13 +30,11 @@ import java.util.stream.Collectors;
 
 @Service
 public class TelegramBotService extends TelegramWebhookBot {
-    private final String webPath;
     private final TelegramBotConfig config;
 
-    public TelegramBotService(TelegramBotConfig config) throws Exception {
-        super();
+    public TelegramBotService(TelegramBotConfig config, DefaultBotOptions defaultBotOptions) throws Exception {
+        super(defaultBotOptions);
         this.config = config;
-        this.webPath = config.getUrl();
         init();
     }
 
@@ -111,6 +110,15 @@ public class TelegramBotService extends TelegramWebhookBot {
 
     @Override
     public BotApiMethod<?> onWebhookUpdateReceived(Update update) {
+        System.out.println(update.getMessage());
+        SendMessage message = new SendMessage();
+        message.setChatId(update.getMessage().getChatId().toString());
+        message.setText(update.getMessage().getText());
+        try {
+            execute(message);
+        } catch (TelegramApiException e) {
+            throw new RuntimeException(e);
+        }
         return null;
     }
 
@@ -123,6 +131,8 @@ public class TelegramBotService extends TelegramWebhookBot {
         final RestTemplate rest = new RestTemplate();
         final DefaultBotOptions options = getOptions();
         switch (options.getProxyType()) {
+            case NO_PROXY:
+                break;
             case HTTP: {
                 final SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
                 requestFactory.setProxy(new Proxy(Proxy.Type.HTTP,

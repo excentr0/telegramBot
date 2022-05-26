@@ -111,13 +111,12 @@ public class TelegramBotService extends TelegramWebhookBot {
     @Override
     public BotApiMethod<?> onWebhookUpdateReceived(Update update) {
         System.out.println(update.getMessage());
-        SendMessage message = new SendMessage();
-        message.setChatId(update.getMessage().getChatId().toString());
-        message.setText(update.getMessage().getText());
-        try {
-            execute(message);
-        } catch (TelegramApiException e) {
-            throw new RuntimeException(e);
+        SendMessage message;
+        if (update.hasMessage() && update.getMessage().hasText()) {
+            message = new SendMessage();
+            message.setChatId(update.getMessage().getChatId().toString());
+            message.setText(update.getMessage().getText());
+            return message;
         }
         return null;
     }

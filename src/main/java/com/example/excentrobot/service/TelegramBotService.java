@@ -2,29 +2,18 @@ package com.example.excentrobot.service;
 
 import com.example.excentrobot.config.TelegramBotConfig;
 import com.example.excentrobot.entity.Command;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import org.telegram.telegrambots.bots.DefaultBotOptions;
 import org.telegram.telegrambots.bots.TelegramWebhookBot;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.methods.updates.SetWebhook;
-import org.telegram.telegrambots.meta.api.objects.ApiResponse;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException;
 
 import javax.annotation.PostConstruct;
-import java.net.InetSocketAddress;
-import java.net.Proxy;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -42,22 +31,6 @@ public class TelegramBotService extends TelegramWebhookBot {
     @Override
     public String getBotUsername() {
         return config.getUsername();
-    }
-
-    @Override
-    public void setWebhook(SetWebhook setWebhook) throws TelegramApiException {
-        try {
-            final RestTemplate rest = newRestTemplate();
-            final HttpHeaders headers = new HttpHeaders();
-            headers.add("Content-Type", "application/json");
-            headers.add("Accept", "application/json");
-
-            final String setWebhookUrl =
-                    String.format("https://api.telegram.org/bot%s/%s", getBotToken(), SetWebhook.PATH);
-            rest.exchange(setWebhookUrl, HttpMethod.POST, new HttpEntity<>(setWebhook, headers), ApiResponse.class);
-        } catch (Exception e) {
-            throw new TelegramApiRequestException("Error executing setWebHook method", e);
-        }
     }
 
     @PostConstruct
@@ -78,11 +51,6 @@ public class TelegramBotService extends TelegramWebhookBot {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    @Override
-    public String getBotToken() {
-        return config.getToken();
     }
 
     @Override
@@ -117,28 +85,8 @@ public class TelegramBotService extends TelegramWebhookBot {
         return null;
     }
 
-    private RestTemplate newRestTemplate() {
-        final RestTemplate rest = new RestTemplate();
-        final DefaultBotOptions options = getOptions();
-        switch (options.getProxyType()) {
-            case NO_PROXY:
-                break;
-            case HTTP: {
-                final SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-                requestFactory.setProxy(new Proxy(Proxy.Type.HTTP,
-                        new InetSocketAddress(options.getProxyHost(), options.getProxyPort())));
-                rest.setRequestFactory(requestFactory);
-                break;
-            }
-            case SOCKS4:
-            case SOCKS5: {
-                final SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-                requestFactory.setProxy(new Proxy(Proxy.Type.SOCKS,
-                        new InetSocketAddress(options.getProxyHost(), options.getProxyPort())));
-                rest.setRequestFactory(requestFactory);
-                break;
-            }
-        }
-        return rest;
+    @Override
+    public String getBotToken() {
+        return config.getToken();
     }
 }

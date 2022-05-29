@@ -15,7 +15,7 @@ public class MainController {
     public MainController(TelegramBotService telegramBotService) {this.telegramBotService = telegramBotService;}
 
     @ResponseBody
-    @PostMapping(value = "/callback/${TELEGRAM_TOKEN}")
+    @PostMapping(value = "/callback")
     public BotApiMethod<?> onUpdateReceived(@RequestBody Update update) {
         return telegramBotService.onWebhookUpdateReceived(update);
     }

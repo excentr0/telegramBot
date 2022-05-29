@@ -15,8 +15,9 @@ import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updates.SetWebhook;
 import org.telegram.telegrambots.meta.api.objects.ApiResponse;
+import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.WebhookInfo;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException;
@@ -32,7 +33,7 @@ import java.util.stream.Collectors;
 public class TelegramBotService extends TelegramWebhookBot {
     private final TelegramBotConfig config;
 
-    public TelegramBotService(TelegramBotConfig config, DefaultBotOptions defaultBotOptions) throws Exception {
+    public TelegramBotService(TelegramBotConfig config, DefaultBotOptions defaultBotOptions) {
         super(defaultBotOptions);
         this.config = config;
         init();
@@ -60,21 +61,7 @@ public class TelegramBotService extends TelegramWebhookBot {
     }
 
     @PostConstruct
-    private void init() throws Exception {
-        final WebhookInfo info = getWebhookInfo();
-        final String url = info.getUrl();
-        final String webHookUrl = computeCallbackEndpoint();
-
-        if (url == null
-                || url.isEmpty()
-                || !url.equals(webHookUrl)
-                || info.getMaxConnections() != config.getMaxConnections()) {
-            final SetWebhook setWebhook = new SetWebhook();
-            setWebhook.setUrl(webHookUrl);
-            setWebhook.setMaxConnections(config.getMaxConnections());
-            setWebhook(setWebhook);
-        }
-
+    private void init() {
         registerMyCommands();
     }
 
@@ -93,16 +80,6 @@ public class TelegramBotService extends TelegramWebhookBot {
         }
     }
 
-    private String computeCallbackEndpoint() {
-        final StringBuilder sb = new StringBuilder(config.getUrl());
-        if (sb.charAt(sb.length() - 1) != '/') {
-            sb.append('/');
-        }
-        sb.append("callback/");
-        sb.append(config.getToken());
-        return sb.toString();
-    }
-
     @Override
     public String getBotToken() {
         return config.getToken();
@@ -111,14 +88,28 @@ public class TelegramBotService extends TelegramWebhookBot {
     @Override
     public BotApiMethod<?> onWebhookUpdateReceived(Update update) {
         System.out.println(update.getMessage());
-        SendMessage message;
-        if (update.hasMessage() && update.getMessage().hasText()) {
-            message = new SendMessage();
-            message.setChatId(update.getMessage().getChatId().toString());
-            message.setText(update.getMessage().getText());
-            return message;
+
+        if (update.hasCallbackQuery()) {
+            return handleCallback(update.getCallbackQuery());
+        } else if (update.hasMessage()) {
+            return handleMessage(update.getMessage());
         }
         return null;
+    }
+
+    private BotApiMethod<?> handleMessage(Message message) {
+        SendMessage sendMessage;
+        sendMessage = new SendMessage();
+        sendMessage.setChatId(message.getChatId().toString());
+        sendMessage.setText(message.getText());
+        return sendMessage;
+    }
+
+    private BotApiMethod<?> handleCallback(CallbackQuery callbackQuery) {
+        SendMessage message = new SendMessage();
+        message.setChatId(message.getChatId());
+        message.setText(callbackQuery.toString());
+        return message;
     }
 
     @Override

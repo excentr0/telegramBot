@@ -40,13 +40,12 @@ public class TelegramBotService extends TelegramWebhookBot {
 
     private void registerMyCommands() {
         try {
-            List<BotCommand> commands =
-                    Arrays.stream(Command.values())
-                            .map(command -> BotCommand.builder()
-                                    .command(command.getName())
-                                    .description(command.getDesc())
-                                    .build())
-                            .collect(Collectors.toList());
+            List<BotCommand> commands = Arrays.stream(Command.values())
+                    .map(command -> BotCommand.builder()
+                            .command(command.getName())
+                            .description(command.getDesc())
+                            .build())
+                    .collect(Collectors.toList());
             execute(SetMyCommands.builder().commands(commands).build());
         } catch (Exception e) {
             e.printStackTrace();
@@ -69,7 +68,7 @@ public class TelegramBotService extends TelegramWebhookBot {
         SendMessage sendMessage;
         sendMessage = new SendMessage();
         sendMessage.setChatId(message.getChatId().toString());
-        sendMessage.setText(message.getText());
+        sendMessage.setText(message.getText() != null ? message.getText() : "No text");
         return sendMessage;
     }
 
